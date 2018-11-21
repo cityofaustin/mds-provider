@@ -4,14 +4,13 @@ Work with MDS Provider data as (Geo)JSON files and objects.
 
 import fiona
 from datetime import datetime
-import geopandas
 import json
 import os
 import pandas as pd
 from pathlib import Path
 import requests
 import shapely.geometry
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, mapping
 from uuid import UUID
 
 
@@ -51,24 +50,17 @@ def to_feature(shape, properties={}):
 
     Optionally give the Feature a :properties: dict.
     """
-    collection = to_feature_collection(shape)
-    feature = collection["features"][0]
+    feature = mapping(shape)
+
+    if isinstance(shape, Point):
+        feature["coordinates"] = list(feature["coordinates"])
+
+    else:
+        # assume shape is polygon (multipolygon will break)
+        feature["coordinates"] = [list( list(coords) for coords in part ) for part in feature["coordinates"]]
+
     feature["properties"] = properties
-
-    # remove some unnecessary and redundant data
-    if "id" in feature:
-        del feature["id"]
-    if isinstance(shape, Point) and "bbox" in feature:
-        del feature["bbox"]
-
-    return dict(feature)
-
-def to_feature_collection(shape):
-    """
-    Create a GeoJSON FeatureCollection object for the given shapely.geometry :shape:.
-    """
-    collection = geopandas.GeoSeries([shape]).__geo_interface__
-    return dict(collection)
+    return feature
 
 def read_data_file(src, record_type):
     """
