@@ -2,15 +2,15 @@
 Work with MDS Provider data as (Geo)JSON files and objects.
 """
 
-import fiona
 from datetime import datetime
+import fiona
 import json
 import os
-import pandas as pd
+import pandas
 from pathlib import Path
 import requests
 import shapely.geometry
-from shapely.geometry import Point, Polygon, mapping
+import shapely.ops
 from uuid import UUID
 
 
@@ -42,7 +42,7 @@ def extract_point(feature):
     Extract the coordinates from the given GeoJSON :feature: as a shapely.geometry.Point
     """
     coords = feature["geometry"]["coordinates"]
-    return Point(coords[0], coords[1])
+    return shapely.geometry.Point(coords[0], coords[1])
 
 def to_feature(shape, properties={}):
     """
@@ -50,16 +50,15 @@ def to_feature(shape, properties={}):
 
     Optionally give the Feature a :properties: dict.
     """
-    feature = mapping(shape)
+    feature = shapely.geometry.mapping(shape)
+    feature["properties"] = properties
 
-    if isinstance(shape, Point):
+    if isinstance(shape, shapely.geometry.Point):
         feature["coordinates"] = list(feature["coordinates"])
-
     else:
         # assume shape is polygon (multipolygon will break)
-        feature["coordinates"] = [list( list(coords) for coords in part ) for part in feature["coordinates"]]
+        feature["coordinates"] = [list(list(coords) for coords in part) for part in feature["coordinates"]]
 
-    feature["properties"] = properties
     return feature
 
 def read_data_file(src, record_type):
@@ -124,4 +123,3 @@ class CustomJsonEncoder(json.JSONEncoder):
             return str(obj)
 
         return json.JSONEncoder.default(self, obj)
-
