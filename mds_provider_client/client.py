@@ -14,23 +14,34 @@ class ProviderClient(object):
     Client for MDS Provider APIs
     """
 
-    def __init__(self, url, token, auth_type="Bearer", headers=None):
+    def __init__(
+        self, url, token, auth_type="Bearer", headers=None, timeout=10, max_attempts=5
+    ):
         """
         Initialize a new ProviderClient object.
 
         :url: The provider's base MDS endpoint url.
-            
+        
+        :token: API access token which will be used to construct `Authorization` request
+            header as `Authorization: <auth_type> <token>`
+
         :auth_type: The `Authorization` request header type. Default is `Bearer`.  
         
         :headers: Additional optional request headers
         
-        :token: API access token which will be used to construct `Authorization` request header as `Authorization: <auth_type> <token>`
+        :timeout: Number of seconds before request timeout (default 10)
+
+        :max_attempts: The maximum number times to attempt to send a request, in the event
+            of timeout (default 5). 
+        
         """
         self.url = url
         self.token = token
 
         self.auth_type = auth_type
         self.headers = headers if headers else {}
+        self.timeout = timeout
+        self.max_attempts = max_attempts
 
         self.session = self._auth_session()
 
@@ -85,41 +96,36 @@ class ProviderClient(object):
             """
             return page["links"].get("next") if "links" in page else None
 
-        # create a request url for each provider
         url = self._build_url(endpoint)
 
-        # get the initial page of data
-        r = self.session.get(url, params=params)
+        setattr(self, endpoint, [])
 
-        if r.status_code is not 200:
-            __describe(r)
-            # TODO: implement re-try and log failures
-            # TODO: break request.get and response check into separate function
-            r.raise_for_status()
-
-        this_page = r.json()
-
-        setattr(self, endpoint, this_page["data"][endpoint]) if __has_data(this_page) else setattr(self, endpoint, [])
-
-        # get subsequent pages of data
-        next_url = __next_url(this_page)
-
-        while paging and next_url:
-            r = self.session.get(next_url)
+        while True:
+            # get the data
+            r = self.session.get(url, params=params, timeout=self.timeout)
 
             if r.status_code is not 200:
                 __describe(r)
-                break
+                # TODO: implement re-try and log failures
+                # TODO: break request.get and response check into separate function
+                r.raise_for_status()
 
             this_page = r.json()
 
             if __has_data(this_page):
+                # append retrieved data
                 getattr(self, endpoint).extend(this_page["data"][endpoint])
-                next_url = __next_url(this_page)
             else:
+                # assume subsequent pages are empty
                 break
 
-        return self[endpoint]
+            # get subsequent pages of data
+            url = __next_url(this_page)
+
+            if not paging or not url:
+                break
+
+        return getattr(self, endpoint)
 
     def _date_format(self, dt):
         """
@@ -128,12 +134,7 @@ class ProviderClient(object):
         return int(dt.timestamp()) if isinstance(dt, datetime) else int(dt)
 
     def get_status_changes(
-        self,
-        start_time=None,
-        end_time=None,
-        bbox=None,
-        paging=True,
-        **kwargs,
+        self, start_time=None, end_time=None, bbox=None, paging=True, **kwargs
     ):
         """
         Request Status Changes data. Returns a dict of provider => list of status_changes payload(s)
