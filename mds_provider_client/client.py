@@ -17,6 +17,9 @@ class ProviderClient(object):
         Initialize a new ProviderClient object.
 
         :url: The provider's base MDS endpoint url.
+        :auth_type: The `Authorization` request header type. Default is `Bearer`.  
+        :headers: Additional optional request headers
+        :token: API access token which will be used to contrusuct `Authorization` request header as `Authorization: <auth_type> <token>`
         """
         self.url = url
         self.auth_type = auth_type
@@ -46,7 +49,7 @@ class ProviderClient(object):
         """
         Internal helper for sending requests.
 
-        Returns a list trip records.
+        Returns a list of trip records.
         """
         def __describe(res):
             """
