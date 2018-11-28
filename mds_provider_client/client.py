@@ -4,14 +4,16 @@ MDS Provider API client implementation.
 
 from datetime import datetime
 import json
-from mds_provider_client.auth import OAuthClientCredentialsAuth
 
+from mds_provider_client.auth import OAuthClientCredentialsAuth
+import requests
+from requests import Session
 
 class ProviderClient(OAuthClientCredentialsAuth):
     """
     Client for MDS Provider APIs
     """
-    def __init__(self, url, token=None, token_url=None):
+    def __init__(self, url, token=None, auth_type='Bearer'):
         """
         Initialize a new ProviderClient object.
 
@@ -19,18 +21,24 @@ class ProviderClient(OAuthClientCredentialsAuth):
         """
         self.url = url
         self.token = token
-        self.token_url = token_url
+        self.auth_type = auth_type
 
-    def _auth_session(self, provider):
+        self.session = self._auth_session()
+
+    def _auth_session(self):
         """
-        Internal helper to establish an authenticated session with the :provider:.
+        Internal helper to establish an authenticated session with the
+        `Authorization: :auth_type: :token:` header.
         """
-        if self.token and not self.token_url:
-            # auth token defined by provider
-            return self.auth_token_session(provider)
-        else:
-            # OAuth 2.0 client_credentials grant flow
-            return self.oauth_session(provider)
+        session = Session()
+        session.headers.update({ "Authorization": f"{self.auth_type} {self.token}" })
+
+        # TODO: do we need to support additional headers? Here's some code for that:
+        # headers = getattr(provider, "headers", None)
+        # if headers:
+        #     session.headers.update(headers)
+
+        return session
 
     def _build_url(self, provider, endpoint):
         """
