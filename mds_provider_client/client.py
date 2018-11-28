@@ -11,24 +11,21 @@ class ProviderClient(OAuthClientCredentialsAuth):
     """
     Client for MDS Provider APIs
     """
-    def __init__(self, providers=None, ref=None):
+    def __init__(self, url, token=None, token_url=None):
         """
         Initialize a new ProviderClient object.
 
-        :providers: is a list of Providers this client tracks by default. If None is given, downloads and uses the official Provider registry.
-
-        When using the official Providers registry, :ref: could be any of:
-            - git branch name
-            - commit hash (long or short)
-            - git tag
+        :url: The provider's base MDS endpoint url.
         """
-        self.providers = providers if providers is not None else get_registry(ref)
+        self.url = url
+        self.token = token
+        self.token_url = token_url
 
     def _auth_session(self, provider):
         """
         Internal helper to establish an authenticated session with the :provider:.
         """
-        if hasattr(provider, "token") and not hasattr(provider, "token_url"):
+        if self.token and not self.token_url:
             # auth token defined by provider
             return self.auth_token_session(provider)
         else:
