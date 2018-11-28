@@ -101,14 +101,29 @@ class ProviderClient(object):
         setattr(self, endpoint, [])
 
         while True:
-            # get the data
-            r = self.session.get(url, params=params, timeout=self.timeout)
 
-            if r.status_code is not 200:
-                __describe(r)
-                # TODO: implement re-try and log failures
-                # TODO: break request.get and response check into separate function
-                r.raise_for_status()
+            #  logic to retry request on timeout
+            attempts = 0
+            while attempts < self.max_attempts:
+
+                attempts += 1
+
+                try:
+                    # get the data
+                    r = self.session.get(url, params=params, timeout=self.timeout)
+
+                    if r.status_code is not 200:
+                        __describe(r)
+                        r.raise_for_status()
+                    
+                    break
+
+                except requests.exceptions.Timeout as e:
+                    if attempts < self.max_attempts:
+                        print("Request timeout. Trying again...")
+                        continue
+                    else:
+                        raise e
 
             this_page = r.json()
 
