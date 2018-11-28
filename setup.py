@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 
 READMEFILE = "README.md"
-VERSIONFILE = os.path.join("mds", "_version.py")
+VERSIONFILE = os.path.join("mds-provider-client", "_version.py")
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
 
 
@@ -18,25 +18,15 @@ def get_version():
 
 
 setup(
-    name="mds_provider",
+    name="mds_provider_client",
     version=get_version(),
-    description="Tools for working with Mobility Data Specification Provider data",
+    description="Module implementing the MDS Provider API",
     long_description=open(READMEFILE).read(),
-    url="https://github.com/CityofSantaMonica/mds-provider",
     author="City of Santa Monica and contributors",
-    license="MIT",
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
-        "Fiona",
-        "jsonschema >= 3.0.0a2",
-        "numpy",
-        "pandas",
-        "psycopg2-binary",
         "requests",
-        "scipy",
-        "Shapely",
-        "sqlalchemy"
     ],
     classifiers=[
         "Environment :: Docker",
