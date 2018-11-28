@@ -4,8 +4,9 @@
 
 import pytest
 
-from mds_provider_client import client
+from mds_provider_client.client import *
 
 class TestMdsProviderClient:
     def test_basic_building(self):
-        assert True
+        client = ProviderClient(url='http://python.org')
+        assert client.url == "http://python.org"
