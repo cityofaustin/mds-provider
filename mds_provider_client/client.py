@@ -14,19 +14,23 @@ class ProviderClient(object):
     Client for MDS Provider APIs
     """
 
-    def __init__(self, url, auth_type="Bearer", headers=None, token=None):
+    def __init__(self, url, token, auth_type="Bearer", headers=None):
         """
         Initialize a new ProviderClient object.
 
         :url: The provider's base MDS endpoint url.
+            
         :auth_type: The `Authorization` request header type. Default is `Bearer`.  
+        
         :headers: Additional optional request headers
-        :token: API access token which will be used to contrusuct `Authorization` request header as `Authorization: <auth_type> <token>`
+        
+        :token: API access token which will be used to construct `Authorization` request header as `Authorization: <auth_type> <token>`
         """
         self.url = url
+        self.token = token
+
         self.auth_type = auth_type
         self.headers = headers if headers else {}
-        self.token = token
 
         self.session = self._auth_session()
 
@@ -125,7 +129,6 @@ class ProviderClient(object):
 
     def get_status_changes(
         self,
-        providers=None,
         start_time=None,
         end_time=None,
         bbox=None,
@@ -136,9 +139,6 @@ class ProviderClient(object):
         Request Status Changes data. Returns a dict of provider => list of status_changes payload(s)
 
         Supported keyword args:
-
-            - `providers`: One or more Providers to issue this request to.
-                           The default is to issue the request to all Providers.
 
             - `start_time`: Filters for status changes where `event_time` occurs at or after the given time
                             Should be a datetime object or numeric representation of UNIX seconds
