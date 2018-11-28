@@ -55,7 +55,7 @@ class ProviderClient(object):
         """
         Internal helper for sending requests.
 
-        Returns a list of trip records.
+        Returns list of records and stores them at `self.<endpoint>`. 
         """
 
         def __describe(res):
@@ -99,7 +99,7 @@ class ProviderClient(object):
 
         this_page = r.json()
 
-        self.data = this_page["data"]["trips"] if __has_data(this_page) else []
+        setattr(self, endpoint, this_page["data"][endpoint]) if __has_data(this_page) else setattr(self, endpoint, [])
 
         # get subsequent pages of data
         next_url = __next_url(this_page)
@@ -114,12 +114,12 @@ class ProviderClient(object):
             this_page = r.json()
 
             if __has_data(this_page):
-                self.data += this_page["data"]["trips"]
+                getattr(self, endpoint).extend(this_page["data"][endpoint])
                 next_url = __next_url(this_page)
             else:
                 break
 
-        return self.data
+        return self[endpoint]
 
     def _date_format(self, dt):
         """
@@ -157,8 +157,6 @@ class ProviderClient(object):
             - `paging`: True (default) to follow paging and request all available data.
                         False to request only the first page.
         """
-        if providers is None:
-            providers = self.providers
 
         # convert datetimes to querystring friendly format
         if start_time is not None:
@@ -170,7 +168,7 @@ class ProviderClient(object):
         params = {**dict(start_time=start_time, end_time=end_time, bbox=bbox), **kwargs}
 
         # make the request(s)
-        status_changes = self._request(providers, mds.STATUS_CHANGES, params, paging)
+        status_changes = self._request("status_changes", params, paging)
 
         return status_changes
 
