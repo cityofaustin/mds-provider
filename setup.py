@@ -4,7 +4,7 @@ from setuptools import find_packages, setup
 
 
 READMEFILE = "README.md"
-VERSIONFILE = os.path.join("mds-provider-client", "_version.py")
+VERSIONFILE = os.path.join("mds_provider_client", "_version.py")
 VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
 
 

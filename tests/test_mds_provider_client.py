@@ -4,7 +4,7 @@
 
 import pytest
 
-import mds_provider_client
+from mds_provider_client import client
 
 class TestMdsProviderClient:
     def test_basic_building(self):

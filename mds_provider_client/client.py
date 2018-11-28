@@ -4,9 +4,7 @@ MDS Provider API client implementation.
 
 from datetime import datetime
 import json
-import mds
-from mds.api.auth import OAuthClientCredentialsAuth
-from mds.providers import get_registry, Provider
+from mds_provider_client.auth import OAuthClientCredentialsAuth
 
 
 class ProviderClient(OAuthClientCredentialsAuth):
