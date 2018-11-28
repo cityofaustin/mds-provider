@@ -8,11 +8,13 @@ import json
 import requests
 from requests import Session
 
+
 class ProviderClient(object):
     """
     Client for MDS Provider APIs
     """
-    def __init__(self, url, auth_type='Bearer', headers=None, token=None):
+
+    def __init__(self, url, auth_type="Bearer", headers=None, token=None):
         """
         Initialize a new ProviderClient object.
 
@@ -33,7 +35,7 @@ class ProviderClient(object):
         Internal helper to establish an authenticated session with the
         `Authorization: :auth_type: :token:` header.
         """
-        self.headers.update({ "Authorization": f"{self.auth_type} {self.token}" })
+        self.headers.update({"Authorization": f"{self.auth_type} {self.token}"})
         session = Session()
         session.headers.update(self.headers)
 
@@ -51,13 +53,14 @@ class ProviderClient(object):
 
         Returns a list of trip records.
         """
+
         def __describe(res):
             """
             Prints details about the given response.
             """
             print(f"Requested {res.url}, Response Code: {res.status_code}")
             print("Response Headers:")
-            for k,v in res.headers.items():
+            for k, v in res.headers.items():
                 print(f"{k}: {v}")
 
             if r.status_code is not 200:
@@ -86,13 +89,13 @@ class ProviderClient(object):
 
         if r.status_code is not 200:
             __describe(r)
-            #TODO: implement re-try and log failures
-            #TODO: break request.get and response check into separate function
+            # TODO: implement re-try and log failures
+            # TODO: break request.get and response check into separate function
             r.raise_for_status()
 
         this_page = r.json()
 
-        self.data = this_page['data']['trips'] if __has_data(this_page) else []
+        self.data = this_page["data"]["trips"] if __has_data(this_page) else []
 
         # get subsequent pages of data
         next_url = __next_url(this_page)
@@ -107,7 +110,7 @@ class ProviderClient(object):
             this_page = r.json()
 
             if __has_data(this_page):
-                self.data += this_page['data']['trips']
+                self.data += this_page["data"]["trips"]
                 next_url = __next_url(this_page)
             else:
                 break
@@ -127,7 +130,8 @@ class ProviderClient(object):
         end_time=None,
         bbox=None,
         paging=True,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Request Status Changes data. Returns a dict of provider => list of status_changes payload(s)
 
@@ -163,10 +167,7 @@ class ProviderClient(object):
             end_time = self._date_format(end_time)
 
         # gather all the params together
-        params = {
-            **dict(start_time=start_time, end_time=end_time, bbox=bbox),
-            **kwargs
-        }
+        params = {**dict(start_time=start_time, end_time=end_time, bbox=bbox), **kwargs}
 
         # make the request(s)
         status_changes = self._request(providers, mds.STATUS_CHANGES, params, paging)
@@ -182,7 +183,8 @@ class ProviderClient(object):
         end_time=None,
         bbox=None,
         paging=True,
-        **kwargs):
+        **kwargs,
+    ):
         """
         Request Trips data. Returns a dict of provider => list of trips payload(s).
 
@@ -219,9 +221,15 @@ class ProviderClient(object):
             end_time = self._date_format(end_time)
 
         # gather all the params togethers
-        params = { 
-            **dict(device_id=device_id, vehicle_id=vehicle_id, start_time=start_time, end_time=end_time, bbox=bbox),
-            **kwargs
+        params = {
+            **dict(
+                device_id=device_id,
+                vehicle_id=vehicle_id,
+                start_time=start_time,
+                end_time=end_time,
+                bbox=bbox,
+            ),
+            **kwargs,
         }
 
         # make the request(s)
