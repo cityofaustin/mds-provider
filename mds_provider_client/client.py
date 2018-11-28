@@ -5,23 +5,23 @@ MDS Provider API client implementation.
 from datetime import datetime
 import json
 
-from mds_provider_client.auth import OAuthClientCredentialsAuth
 import requests
 from requests import Session
 
-class ProviderClient(OAuthClientCredentialsAuth):
+class ProviderClient(object):
     """
     Client for MDS Provider APIs
     """
-    def __init__(self, url, token=None, auth_type='Bearer'):
+    def __init__(self, url, auth_type='Bearer', headers=None, token=None):
         """
         Initialize a new ProviderClient object.
 
         :url: The provider's base MDS endpoint url.
         """
         self.url = url
-        self.token = token
         self.auth_type = auth_type
+        self.headers = headers if headers else {}
+        self.token = token
 
         self.session = self._auth_session()
 
@@ -30,34 +30,23 @@ class ProviderClient(OAuthClientCredentialsAuth):
         Internal helper to establish an authenticated session with the
         `Authorization: :auth_type: :token:` header.
         """
+        self.headers.update({ "Authorization": f"{self.auth_type} {self.token}" })
         session = Session()
-        session.headers.update({ "Authorization": f"{self.auth_type} {self.token}" })
-
-        # TODO: do we need to support additional headers? Here's some code for that:
-        # headers = getattr(provider, "headers", None)
-        # if headers:
-        #     session.headers.update(headers)
+        session.headers.update(self.headers)
 
         return session
 
-    def _build_url(self, provider, endpoint):
+    def _build_url(self, endpoint):
         """
         Internal helper for building API urls.
         """
-        url = provider.mds_api_url
+        return self.url.rstrip("/") + "/" + endpoint
 
-        if hasattr(provider, "mds_api_suffix"):
-            url += "/" + getattr(provider, "mds_api_suffix").rstrip("/")
-
-        url += "/" + endpoint
-
-        return url
-
-    def _request(self, providers, endpoint, params, paging):
+    def _request(self, endpoint, params, paging):
         """
         Internal helper for sending requests.
 
-        Returns a dict of provider => payload(s).
+        Returns a list trip records.
         """
         def __describe(res):
             """
@@ -87,47 +76,40 @@ class ProviderClient(OAuthClientCredentialsAuth):
             return page["links"].get("next") if "links" in page else None
 
         # create a request url for each provider
-        urls = [self._build_url(p, endpoint) for p in providers]
+        url = self._build_url(endpoint)
 
-        # keyed by provider
-        results = {}
+        # get the initial page of data
+        r = self.session.get(url, params=params)
 
-        for i in range(len(providers)):
-            provider, url = providers[i], urls[i]
+        if r.status_code is not 200:
+            __describe(r)
+            #TODO: implement re-try and log failures
+            #TODO: break request.get and response check into separate function
+            r.raise_for_status()
 
-            # establish an authenticated session
-            session = self._auth_session(provider)
+        this_page = r.json()
 
-            # get the initial page of data
-            r = session.get(url, params=params)
+        self.data = this_page['data']['trips'] if __has_data(this_page) else []
+
+        # get subsequent pages of data
+        next_url = __next_url(this_page)
+
+        while paging and next_url:
+            r = self.session.get(next_url)
 
             if r.status_code is not 200:
                 __describe(r)
-                continue
+                break
 
             this_page = r.json()
 
-            # track the list of pages per provider
-            results[provider] = [this_page] if __has_data(this_page) else []
+            if __has_data(this_page):
+                self.data += this_page['data']['trips']
+                next_url = __next_url(this_page)
+            else:
+                break
 
-            # get subsequent pages of data
-            next_url = __next_url(this_page)
-            while paging and next_url:
-                r = session.get(next_url)
-
-                if r.status_code is not 200:
-                    __describe(r)
-                    break
-
-                this_page = r.json()
-
-                if __has_data(this_page):
-                    results[provider].append(this_page)
-                    next_url = __next_url(this_page)
-                else:
-                    break
-
-        return results
+        return self.data
 
     def _date_format(self, dt):
         """
@@ -227,9 +209,6 @@ class ProviderClient(OAuthClientCredentialsAuth):
             - `paging`: True (default) to follow paging and request all available data.
                         False to request only the first page.
         """
-        if providers is None:
-            providers = self.providers
-
         # convert datetimes to querystring friendly format
         if start_time is not None:
             start_time = self._date_format(start_time)
@@ -243,6 +222,6 @@ class ProviderClient(OAuthClientCredentialsAuth):
         }
 
         # make the request(s)
-        trips = self._request(providers, mds.TRIPS, params, paging)
+        trips = self._request("trips", params, paging)
 
         return trips
