@@ -101,7 +101,8 @@ class ProviderClient(object):
         setattr(self, endpoint, [])
 
         while True:
-
+            print(url)
+            
             #  logic to retry request on timeout
             attempts = 0
             while attempts < self.max_attempts:
@@ -115,7 +116,7 @@ class ProviderClient(object):
                     if r.status_code is not 200:
                         __describe(r)
                         r.raise_for_status()
-                    
+
                     break
 
                 except requests.exceptions.Timeout as e:
