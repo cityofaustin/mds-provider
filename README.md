@@ -1,40 +1,27 @@
-# mds-provider
+# mds-provider-client
 
-Tools for working with [MDS `provider`][provider] data.
+A Python client for interacting with [Mobility Data Specification (MDS)](https://github.com/CityOfLosAngeles/mobility-data-specification) providers. 
+
+Forked from the City of Santa Monica's [`mds-provider`](https://github.com/CityofSantaMonica/mds-provider) toolkit.
 
 Developed and tested with Python 3.7+.
 
-See [`mds-provider-services`](https://github.com/CityofSantaMonica/mds-provider-services) for real-world usage of many of these tools.
+## Quick Start
 
-## Installation
+```python
+>>> from datetime import datetime
 
-Install with `pip`:
+>>> from mds_provider_client.client import ProviderClient
 
-```bash
-$ pip install -e git+https://github.com/CityofSantaMonica/mds-provider@master#egg=mds_provider
+>> client = ProviderClient(
+        url="https://mds.provider.com",
+        token="top-secret-auth-token",
+        headers={"custom-request-header" : "abc123"},
+        timeout=30
+    )
+
+>>> trips = client.get_trips(
+        start_time=datetime(2018, 11, 21, 16, 30),
+        end_time=datetime.utcnow()
+    )
 ```
-
-Or with `python` directly:
-
-```
-$ git clone https://github.com/CityofSantaMonica/mds-provider.git
-$ cd mds-provider
-$ python setup.py install
-```
-
-## Package organization
-
-| module | description |
-| --------- | ----------- |
-| [`mds`](mds/__init__.py) | Tools for working with Mobility Data Specification `provider` data |
-| [`api`](mds/api/) | Request `provider` data from compatible API endpoints |
-| [`db`](mds/db/) | Load `provider` data into a database |
-| [`fake`](mds/fake/) | Generate fake `provider` data for testing and development |
-| [`json`](mds/json.py) | Work with `provider` data as (Geo)JSON files and objects |
-| [`providers`](mds/providers.py) | Work with the official [MDS Providers registry][registry] |
-| [`schema`](mds/schema/) | Work with the official [MDS Provider JSON schemas][schemas] |
-
-
-[provider]: https://github.com/CityOfLosAngeles/mobility-data-specification/tree/master/provider
-[registry]: https://github.com/CityofLosAngeles/mobility-data-specification/blob/master/providers.csv
-[schemas]: https://github.com/CityOfLosAngeles/mobility-data-specification/tree/master/generate_schema
