@@ -4,6 +4,7 @@ MDS Provider API client implementation.
 
 from datetime import datetime
 import json
+import logging
 
 import requests
 from requests import Session
@@ -68,19 +69,6 @@ class ProviderClient(object):
 
         Returns list of records and stores them at `self.<endpoint>`. 
         """
-
-        def __describe(res):
-            """
-            Prints details about the given response.
-            """
-            print(f"Requested {res.url}, Response Code: {res.status_code}")
-            print("Response Headers:")
-            for k, v in res.headers.items():
-                print(f"{k}: {v}")
-
-            if r.status_code is not 200:
-                print(r.text)
-
         def __has_data(page):
             """
             Checks if this :page: has a "data" property with a non-empty payload
@@ -90,11 +78,11 @@ class ProviderClient(object):
             print(f"Got payload with {len(payload)} {endpoint}")
             return len(payload) > 0
 
-        def __next_url(page):
+        def __next_url(self):
             """
             Gets the next URL or None from :page:
             """
-            return page["links"].get("next") if "links" in page else None
+            return self.links.get("next")
 
         url = self._build_url(endpoint)
 
@@ -111,12 +99,10 @@ class ProviderClient(object):
 
                 try:
                     # get the data
-                    r = self.session.get(url, params=params, timeout=self.timeout)
-
-                    if r.status_code is not 200:
-                        __describe(r)
-                        r.raise_for_status()
-
+                    logging.debug(url)
+                    logging.debug(params)
+                    self.res = self.session.get(url, params=params, timeout=self.timeout)
+                    self.res.raise_for_status()
                     break
 
                 except requests.exceptions.Timeout as e:
@@ -126,7 +112,7 @@ class ProviderClient(object):
                     else:
                         raise e
 
-            this_page = r.json()
+            this_page = self.res.json()
 
             if __has_data(this_page):
                 # append retrieved data
@@ -136,7 +122,9 @@ class ProviderClient(object):
                 break
 
             # get subsequent pages of data
-            url = __next_url(this_page)
+            self.links = this_page["links"]
+
+            url = self.links.get("next")
 
             if not paging or not url:
                 break
@@ -251,3 +239,7 @@ class ProviderClient(object):
         trips = self._request("trips", params, paging)
 
         return trips
+
+if __name__ =='__main__':
+    import logging
+    logging.getLogger(__name__)
