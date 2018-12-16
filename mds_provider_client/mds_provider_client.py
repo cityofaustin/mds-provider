@@ -122,8 +122,11 @@ class ProviderClient(object):
                 break
 
             # get subsequent pages of data
-            self.links = this_page["links"]
+            self.links = this_page.get("links")
 
+            if not self.links:
+                break
+                
             url = self.links.get("next")
 
             if not paging or not url:
