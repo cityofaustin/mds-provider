@@ -7,7 +7,7 @@ setup(
     author="City of Santa Monica and contributors",
     install_requires=[
         "requests",
-    ],`
+    ],
     classifiers=[
         "Environment :: Docker",
         "Intended Audience :: Developers",
