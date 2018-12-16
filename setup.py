@@ -3,7 +3,6 @@ from setuptools import setup
 
 setup(
     name="mds_provider_client",
-    version=get_version(),
     description="Module implementing the MDS Provider API",
     author="City of Santa Monica and contributors",
     install_requires=[
