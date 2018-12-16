@@ -19,7 +19,6 @@ def get_version():
 
 setup(
     name="mds_provider_client",
-    version=get_version(),
     description="Module implementing the MDS Provider API",
     long_description=open(READMEFILE).read(),
     author="City of Santa Monica and contributors",
