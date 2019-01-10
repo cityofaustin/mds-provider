@@ -110,7 +110,7 @@ class ProviderClient(object):
                     logging.debug(url)
                     logging.debug(params)
 
-                    if self.auth_type.lower() != "httpbasicauth":
+                    if self.auth_type.lower() == "httpbasicauth":
                         self.res = self.session.get(url, params=params, timeout=self.timeout, auth=(self.user, self.password))
                     else:
                         self.res = self.session.get(url, params=params, timeout=self.timeout)
