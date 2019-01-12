@@ -66,7 +66,10 @@ class ProviderClient(object):
         """
         session = Session()
 
-        if self.auth_type.lower() != "httpbasicauth":
+        if self.auth_type.lower() == "httpbasicauth":
+            session.auth = (self.user, self.password)
+
+        else:
             self.headers.update({"Authorization": f"{self.auth_type} {self.token}"})
             session.headers.update(self.headers)
 
@@ -115,17 +118,9 @@ class ProviderClient(object):
                     # get the data
                     logging.debug(params)
 
-                    if self.auth_type.lower() == "httpbasicauth":
-                        self.res = self.session.get(
-                            url,
-                            params=params,
-                            timeout=self.timeout,
-                            auth=(self.user, self.password),
-                        )
-                    else:
-                        self.res = self.session.get(
-                            url, params=params, timeout=self.timeout
-                        )
+                    self.res = self.session.get(
+                        url, params=params, timeout=self.timeout
+                    )
 
                     self.res.raise_for_status()
 
