@@ -16,7 +16,15 @@ class ProviderClient(object):
     """
 
     def __init__(
-        self, url, token, auth_type="Bearer", headers=None, timeout=10, max_attempts=5
+        self,
+        url,
+        auth_type="Bearer",
+        token=None,
+        user=None,
+        password=None,
+        headers=None,
+        timeout=10,
+        max_attempts=5,
     ):
         """
         Initialize a new ProviderClient object.
@@ -38,6 +46,11 @@ class ProviderClient(object):
         """
         self.url = url
         self.token = token
+        self.user = user
+        self.password = password
+
+        if not token and not user:
+            raise Exception("Username or token is required")
 
         self.auth_type = auth_type
         self.headers = headers if headers else {}
@@ -51,9 +64,14 @@ class ProviderClient(object):
         Internal helper to establish an authenticated session with the
         `Authorization: :auth_type: :token:` header.
         """
-        self.headers.update({"Authorization": f"{self.auth_type} {self.token}"})
         session = Session()
-        session.headers.update(self.headers)
+
+        if self.auth_type.lower() == "httpbasicauth":
+            session.auth = (self.user, self.password)
+
+        else:
+            self.headers.update({"Authorization": f"{self.auth_type} {self.token}"})
+            session.headers.update(self.headers)
 
         return session
 
@@ -69,6 +87,7 @@ class ProviderClient(object):
 
         Returns list of records and stores them at `self.<endpoint>`. 
         """
+
         def __has_data(page):
             """
             Checks if this :page: has a "data" property with a non-empty payload
@@ -89,8 +108,6 @@ class ProviderClient(object):
         setattr(self, endpoint, [])
 
         while True:
-            print(url)
-            
             #  logic to retry request on timeout
             attempts = 0
             while attempts < self.max_attempts:
@@ -99,10 +116,14 @@ class ProviderClient(object):
 
                 try:
                     # get the data
-                    logging.debug(url)
                     logging.debug(params)
-                    self.res = self.session.get(url, params=params, timeout=self.timeout)
+
+                    self.res = self.session.get(
+                        url, params=params, timeout=self.timeout
+                    )
+
                     self.res.raise_for_status()
+
                     break
 
                 except requests.exceptions.Timeout as e:
@@ -243,6 +264,8 @@ class ProviderClient(object):
 
         return trips
 
-if __name__ =='__main__':
+
+if __name__ == "__main__":
     import logging
+
     logging.getLogger(__name__)

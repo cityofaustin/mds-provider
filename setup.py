@@ -9,5 +9,5 @@ setup(
         "requests",
     ],
     packages=['mds_provider_client'],
-    version="0.1.2"
+    version="0.1.3"
 )
