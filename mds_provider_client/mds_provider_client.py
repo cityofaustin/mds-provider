@@ -1,7 +1,6 @@
 """
 MDS Provider API client implementation. 
 """
-
 from datetime import datetime
 import json
 import logging
@@ -87,7 +86,6 @@ class ProviderClient(object):
 
         Returns list of records and stores them at `self.<endpoint>`. 
         """
-
         def __has_data(page):
             """
             Checks if this :page: has a "data" property with a non-empty payload
@@ -147,6 +145,10 @@ class ProviderClient(object):
 
             if not self.links:
                 break
+
+            # after the initial request, remove start/end time from request params
+            # because these are included in the pagination `links`
+            params = None
                 
             url = self.links.get("next")
 
