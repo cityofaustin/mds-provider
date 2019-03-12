@@ -86,6 +86,7 @@ class ProviderClient(object):
 
         Returns list of records and stores them at `self.<endpoint>`. 
         """
+
         def __has_data(page):
             """
             Checks if this :page: has a "data" property with a non-empty payload
@@ -149,7 +150,7 @@ class ProviderClient(object):
             # after the initial request, remove start/end time from request params
             # because these are included in the pagination `links`
             params = None
-                
+
             url = self.links.get("next")
 
             if not paging or not url:
