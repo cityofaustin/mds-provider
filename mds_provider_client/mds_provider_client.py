@@ -4,6 +4,7 @@ MDS Provider API client implementation.
 from datetime import datetime
 import json
 import logging
+import time
 
 import requests
 from requests import Session
@@ -24,6 +25,7 @@ class ProviderClient(object):
         headers=None,
         timeout=10,
         max_attempts=5,
+        delay=1
     ):
         """
         Initialize a new ProviderClient object.
@@ -42,7 +44,10 @@ class ProviderClient(object):
         :max_attempts: The maximum number times to attempt to send a request, in the event
             of timeout (default 5). 
         
+        :delay: Number of seconds to wait between requests (default 1).
+
         """
+        self.delay = delay
         self.url = url
         self.token = token
         self.user = user
@@ -112,6 +117,8 @@ class ProviderClient(object):
             while attempts < self.max_attempts:
 
                 attempts += 1
+
+                time.sleep(self.delay)
 
                 try:
                     # get the data
